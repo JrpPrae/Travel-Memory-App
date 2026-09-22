@@ -52,14 +52,14 @@ export const Header: React.FC<HeaderProps> = ({
                   Pinboard
                 </span>
               </div>
-              <p className="text-xs text-[#9C6B58] font-light hidden sm:block">
+              {/* <p className="text-xs text-[#9C6B58] font-light hidden sm:block">
                 ปักหมุดความทรงจำ • นับสถิติ 3 หมวดการเดินทาง
-              </p>
+              </p> */}
             </div>
           </div>
 
           {/* Quick Actions */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          {/* <div className="flex items-center space-x-2 sm:space-x-3">
             <button
               id="header-reset-btn"
               onClick={onResetDemo}
@@ -77,7 +77,7 @@ export const Header: React.FC<HeaderProps> = ({
               <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>ปักหมุดความทรงจำ</span>
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* Navigation Tabs */}
