@@ -318,9 +318,9 @@ export const InteractiveMapView: React.FC<InteractiveMapViewProps> = ({
             <div className="flex items-center gap-2">
               <span className="font-serif font-bold text-sm text-[#244855] flex items-center gap-1.5">
                 <Compass className="w-4 h-4 text-[#874F41]" />
-                แผนที่ปักหมุดความทรงจำ
+                ปักหมุดบนแผนที่
               </span>
-              <span className="hidden sm:inline text-[#B98D79]">• คลิกบนแผนที่เพื่อปักหมุดตรงจุดนั้น</span>
+              {/* <span className="hidden sm:inline text-[#B98D79]">• คลิกบนแผนที่เพื่อปักหมุดตรงจุดนั้น</span> */}
             </div>
 
             <div className="flex items-center gap-2">
