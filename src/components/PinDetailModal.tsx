@@ -91,9 +91,10 @@ export const PinDetailModal: React.FC<PinDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#244855]/65 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 md:p-8 overflow-y-auto">
-      <div className="bg-[#FFFFFF] rounded-3xl max-w-3xl w-full border border-[#E4CAB3] shadow-2xl relative my-4 sm:my-8 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
-        
+    <div className="fixed inset-0 z-50 bg-[#244855]/65 backdrop-blur-xs overflow-y-auto px-4 py-6 sm:px-6 sm:py-10">
+      <div className="min-h-full flex items-start justify-center">
+      <div className="bg-[#FFFFFF] rounded-3xl max-w-3xl w-full border border-[#E4CAB3] shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+
         {/* Header toolbar */}
         <div className="p-4 sm:p-5 border-b border-[#EFDAC1] flex items-center justify-between bg-[#FBE9D0]">
           <div className="flex items-center gap-2">
@@ -169,7 +170,7 @@ export const PinDetailModal: React.FC<PinDetailModalProps> = ({
                   src={pin.photos[activePhotoIdx]}
                   alt={pin.title}
                   referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
 
                 {/* Slideshow Controls */}
@@ -300,6 +301,7 @@ export const PinDetailModal: React.FC<PinDetailModalProps> = ({
           </button>
         </div>
 
+      </div>
       </div>
 
       {/* Hidden share card: rendered off-screen and captured to a PNG by

@@ -233,9 +233,10 @@ export const PinModal: React.FC<PinModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#244855]/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 md:p-8 overflow-y-auto">
-      <div className="bg-[#FFFFFF] rounded-3xl max-w-2xl w-full p-5 sm:p-7 border border-[#E4CAB3] shadow-2xl relative my-4 sm:my-8 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-        
+    <div className="fixed inset-0 z-50 bg-[#244855]/60 backdrop-blur-xs overflow-y-auto px-4 py-6 sm:px-6 sm:py-10">
+      <div className="min-h-full flex items-start justify-center">
+      <div className="bg-[#FFFFFF] rounded-3xl max-w-2xl w-full p-4 sm:p-7 border border-[#E4CAB3] shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-4 border-b border-[#EFDAC1] mb-5">
           <div className="flex items-center gap-2.5">
@@ -464,7 +465,7 @@ export const PinModal: React.FC<PinModalProps> = ({
 
           {/* Elevation if hiking */}
           {category === 'hiking' && (
-            <div className="grid grid-cols-2 gap-3 p-3 bg-[#EEF4F3] rounded-2xl border border-[#BCCECE]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-[#EEF4F3] rounded-2xl border border-[#BCCECE]">
               <div>
                 <label className="block text-xs font-semibold text-[#4A6C74] mb-1">
                   ความสูงยอดเขา (เมตร จากระดับน้ำทะเล)
@@ -550,14 +551,14 @@ export const PinModal: React.FC<PinModalProps> = ({
                       src={url}
                       alt={`Memory photo ${idx + 1}`}
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
                     <button
                       type="button"
                       onClick={() => handleRemovePhoto(idx)}
-                      className="absolute top-1 right-1 p-1 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-1 right-1 p-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                     {idx === 0 && (
                       <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[9px]">
@@ -668,6 +669,7 @@ export const PinModal: React.FC<PinModalProps> = ({
           </div>
 
         </form>
+      </div>
       </div>
     </div>
   );
