@@ -120,7 +120,6 @@ export const HikingTrailsView: React.FC<HikingTrailsViewProps> = ({
       difficulty: newTrailDifficulty,
       durationDays: newTrailDuration,
       highlight: newTrailHighlight.trim() || 'เส้นทางเดินป่าธรรมชาติ',
-      coverImage: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80',
     };
 
     onAddNewCustomTrail(newTrail);
@@ -278,12 +277,19 @@ export const HikingTrailsView: React.FC<HikingTrailsViewProps> = ({
               <div>
                 {/* Image header with elevation & difficulty */}
                 <div className="relative aspect-[16/10] bg-[#EEF4F3] overflow-hidden">
-                  <img
-                    src={isConquered && pin?.photos?.[0] ? pin.photos[0] : trail.coverImage}
-                    alt={trail.name}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                  {(isConquered && pin?.photos?.[0]) || trail.coverImage ? (
+                    <img
+                      src={isConquered && pin?.photos?.[0] ? pin.photos[0] : trail.coverImage}
+                      alt={trail.name}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-[#5F8085]">
+                      <Mountain className="w-8 h-8 mb-1 stroke-[1.5]" />
+                      <span className="text-xs">ไม่มีรูปภาพ</span>
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
                   {/* Elevation & Difficulty Pills */}

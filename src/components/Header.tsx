@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Map,
   Compass,
   CheckSquare,
   CalendarDays,
-  Plus,
-  RotateCcw,
+  LogOut,
+  ChevronDown,
 } from 'lucide-react';
 import { TravelStats } from '../types';
 
@@ -17,6 +17,8 @@ interface HeaderProps {
   stats: TravelStats;
   onOpenNewPinModal: () => void;
   onResetDemo: () => void;
+  currentUser: string;
+  onLogout: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -25,7 +27,24 @@ export const Header: React.FC<HeaderProps> = ({
   stats,
   onOpenNewPinModal,
   onResetDemo,
+  currentUser,
+  onLogout,
 }) => {
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const initials = currentUser.slice(0, 2).toUpperCase();
+
   const tabs = [
     { id: 'map' as ActiveTab, label: 'แผนที่ปักหมุด', icon: Map, count: stats.provincesVisitedCount + stats.hikingTrailsVisitedCount + stats.countriesVisitedCount },
     { id: 'pinboard' as ActiveTab, label: 'กระดานภาพโพลารอยด์', icon: Compass },
@@ -39,45 +58,58 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center justify-between h-20">
           
           {/* Logo & Brand */}
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('pinboard')}>
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#874F41] to-[#5C3A2E] flex items-center justify-center text-[#FBE9D0] shadow-sm shadow-[#874F41]/20">
-              <Compass className="w-6 h-6 stroke-[2.2]" />
+          <div className="flex items-center gap-2 sm:gap-3 cursor-pointer min-w-0 flex-1" onClick={() => setActiveTab('pinboard')}>
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-[#874F41] to-[#5C3A2E] flex items-center justify-center text-[#FBE9D0] shadow-sm shadow-[#874F41]/20 flex-shrink-0">
+              <Compass className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]" />
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-serif font-bold text-xl sm:text-2xl text-[#244855] tracking-tight">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-serif font-bold text-base sm:text-xl lg:text-2xl text-[#244855] tracking-tight truncate">
                   Travel Memory
                 </span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-[#FDF4E7] text-[#7B483B] font-medium border border-[#E4CAB3]">
+                <span className="hidden sm:inline-block text-xs px-2 py-0.5 rounded-full bg-[#FDF4E7] text-[#7B483B] font-medium border border-[#E4CAB3] flex-shrink-0">
                   Pinboard
                 </span>
               </div>
-              {/* <p className="text-xs text-[#9C6B58] font-light hidden sm:block">
-                ปักหมุดความทรงจำ • นับสถิติ 3 หมวดการเดินทาง
-              </p> */}
             </div>
           </div>
 
-          {/* Quick Actions */}
-          {/* <div className="flex items-center space-x-2 sm:space-x-3">
+          {/* Profile / Account */}
+          <div className="relative flex-shrink-0" ref={profileRef}>
             <button
-              id="header-reset-btn"
-              onClick={onResetDemo}
-              title="รีเซ็ตเป็นข้อมูลตัวอย่าง"
-              className="p-2.5 rounded-xl border border-[#E4CAB3] text-[#9C6B58] hover:bg-[#FDF4E7] hover:text-[#244855] transition-colors"
+              id="header-profile-btn"
+              onClick={() => setIsProfileOpen((v) => !v)}
+              className="flex items-center gap-1.5 sm:gap-2 pl-1 pr-1.5 sm:pr-2.5 py-1 rounded-full border border-[#E4CAB3] bg-[#FDF4E7] hover:bg-[#FFFFFF] transition-colors shadow-xs"
             >
-              <RotateCcw className="w-4 h-4" />
+              <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-[#4A6C74] to-[#244855] text-[#FBE9D0] flex items-center justify-center text-xs sm:text-sm font-bold shadow-xs">
+                {initials}
+              </span>
+              <span className="hidden sm:inline text-xs font-semibold text-[#244855] max-w-[100px] truncate">
+                {currentUser}
+              </span>
+              <ChevronDown className={`hidden sm:block w-3.5 h-3.5 text-[#9C6B58] transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
             </button>
 
-            <button
-              id="header-add-pin-btn"
-              onClick={onOpenNewPinModal}
-              className="px-4 py-2.5 rounded-xl bg-[#874F41] hover:bg-[#6C3F34] text-[#FBE9D0] text-sm font-semibold shadow-sm shadow-[#874F41]/30 transition-all flex items-center gap-2 active:scale-95"
-            >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
-              <span>ปักหมุดความทรงจำ</span>
-            </button>
-          </div> */}
+            {isProfileOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-[#FFFFFF] rounded-2xl border border-[#E4CAB3] shadow-xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="px-4 py-3 border-b border-[#EFDAC1] bg-[#FBE9D0]">
+                  <p className="text-[11px] text-[#9C6B58]">เข้าสู่ระบบเป็น</p>
+                  <p className="text-sm font-semibold text-[#244855] truncate">{currentUser}</p>
+                </div>
+                <button
+                  id="header-logout-btn"
+                  onClick={() => {
+                    setIsProfileOpen(false);
+                    onLogout();
+                  }}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm text-[#B82525] hover:bg-[#FBE8E8] transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>ออกจากระบบ</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Navigation Tabs */}

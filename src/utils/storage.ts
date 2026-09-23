@@ -1,5 +1,4 @@
 import { TravelPin, ChecklistItem, TripPlan, HikingTrail, TravelStats } from '../types';
-import { SAMPLE_PINS, SAMPLE_PLANS } from '../data/samplePins';
 import { DEFAULT_CHECKLIST_TEMPLATES } from '../data/checklistTemplates';
 import { HIKING_TRAILS_PRESET } from '../data/trailsData';
 import { THAI_PROVINCES } from '../data/provincesData';
@@ -10,20 +9,32 @@ const CHECKLIST_KEY = 'travel_pinboard_checklist_v1';
 const PLANS_KEY = 'travel_pinboard_plans_v1';
 const CUSTOM_TRAILS_KEY = 'travel_pinboard_custom_trails_v1';
 
+// Data is namespaced per logged-in user so each account only ever sees its
+// own memories. Call setStorageNamespace(username) right after login.
+let namespace = 'guest';
+
+export function setStorageNamespace(username: string): void {
+  namespace = username || 'guest';
+}
+
+function nsKey(base: string): string {
+  return `${base}::${namespace}`;
+}
+
 export function getSavedPins(): TravelPin[] {
   try {
-    const raw = localStorage.getItem(PINS_KEY);
-    if (!raw) return SAMPLE_PINS;
+    const raw = localStorage.getItem(nsKey(PINS_KEY));
+    if (!raw) return [];
     return JSON.parse(raw);
   } catch (e) {
     console.error('Error loading pins:', e);
-    return SAMPLE_PINS;
+    return [];
   }
 }
 
 export function savePins(pins: TravelPin[]): void {
   try {
-    localStorage.setItem(PINS_KEY, JSON.stringify(pins));
+    localStorage.setItem(nsKey(PINS_KEY), JSON.stringify(pins));
   } catch (e) {
     console.error('Error saving pins:', e);
   }
@@ -31,7 +42,7 @@ export function savePins(pins: TravelPin[]): void {
 
 export function getSavedChecklist(): ChecklistItem[] {
   try {
-    const raw = localStorage.getItem(CHECKLIST_KEY);
+    const raw = localStorage.getItem(nsKey(CHECKLIST_KEY));
     if (!raw) return DEFAULT_CHECKLIST_TEMPLATES;
     return JSON.parse(raw);
   } catch (e) {
@@ -42,7 +53,7 @@ export function getSavedChecklist(): ChecklistItem[] {
 
 export function saveChecklist(items: ChecklistItem[]): void {
   try {
-    localStorage.setItem(CHECKLIST_KEY, JSON.stringify(items));
+    localStorage.setItem(nsKey(CHECKLIST_KEY), JSON.stringify(items));
   } catch (e) {
     console.error('Error saving checklist:', e);
   }
@@ -50,18 +61,18 @@ export function saveChecklist(items: ChecklistItem[]): void {
 
 export function getSavedPlans(): TripPlan[] {
   try {
-    const raw = localStorage.getItem(PLANS_KEY);
-    if (!raw) return SAMPLE_PLANS;
+    const raw = localStorage.getItem(nsKey(PLANS_KEY));
+    if (!raw) return [];
     return JSON.parse(raw);
   } catch (e) {
     console.error('Error loading plans:', e);
-    return SAMPLE_PLANS;
+    return [];
   }
 }
 
 export function savePlans(plans: TripPlan[]): void {
   try {
-    localStorage.setItem(PLANS_KEY, JSON.stringify(plans));
+    localStorage.setItem(nsKey(PLANS_KEY), JSON.stringify(plans));
   } catch (e) {
     console.error('Error saving plans:', e);
   }
@@ -69,7 +80,7 @@ export function savePlans(plans: TripPlan[]): void {
 
 export function getSavedTrails(): HikingTrail[] {
   try {
-    const raw = localStorage.getItem(CUSTOM_TRAILS_KEY);
+    const raw = localStorage.getItem(nsKey(CUSTOM_TRAILS_KEY));
     if (!raw) return HIKING_TRAILS_PRESET;
     return JSON.parse(raw);
   } catch (e) {
@@ -80,13 +91,13 @@ export function getSavedTrails(): HikingTrail[] {
 
 export function saveTrails(trails: HikingTrail[]): void {
   try {
-    localStorage.setItem(CUSTOM_TRAILS_KEY, JSON.stringify(trails));
+    localStorage.setItem(nsKey(CUSTOM_TRAILS_KEY), JSON.stringify(trails));
   } catch (e) {
     console.error('Error saving trails:', e);
   }
 }
 
-export function calculateTravelStats(pins: TravelPin[]): TravelStats {
+export function calculateTravelStats(pins: TravelPin[], trails: HikingTrail[] = []): TravelStats {
   // Provinces
   const visitedProvinceCodes = new Set<string>();
   pins.filter(p => p.category === 'province').forEach(p => {
@@ -98,6 +109,19 @@ export function calculateTravelStats(pins: TravelPin[]): TravelStats {
       if (found) visitedProvinceCodes.add(found.id);
       else visitedProvinceCodes.add(p.title);
     }
+  });
+
+  // A hiking trail sits inside a real Thai province, so visiting it also
+  // counts that province as visited (e.g. Phu Kradueng => Loei).
+  pins.filter(p => p.category === 'hiking').forEach(p => {
+    const trail = trails.find(t => t.id === p.locationCode) ||
+      trails.find(t => p.title.includes(t.name) || t.name.includes(p.title));
+    if (!trail) return;
+    trail.province.split('/').forEach((rawName) => {
+      const name = rawName.trim();
+      const found = THAI_PROVINCES.find(prov => name.includes(prov.nameTh) || prov.nameTh.includes(name));
+      if (found) visitedProvinceCodes.add(found.id);
+    });
   });
 
   // Hiking Trails
@@ -153,9 +177,9 @@ export function exportBackupJSON(pins: TravelPin[], checklist: ChecklistItem[], 
 }
 
 export function resetToSampleData(): void {
-  localStorage.removeItem(PINS_KEY);
-  localStorage.removeItem(CHECKLIST_KEY);
-  localStorage.removeItem(PLANS_KEY);
-  localStorage.removeItem(CUSTOM_TRAILS_KEY);
+  localStorage.removeItem(nsKey(PINS_KEY));
+  localStorage.removeItem(nsKey(CHECKLIST_KEY));
+  localStorage.removeItem(nsKey(PLANS_KEY));
+  localStorage.removeItem(nsKey(CUSTOM_TRAILS_KEY));
   window.location.reload();
 }

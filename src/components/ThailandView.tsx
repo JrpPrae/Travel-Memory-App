@@ -10,17 +10,19 @@ import {
   Sparkles,
   ExternalLink
 } from 'lucide-react';
-import { ThaiProvince, TravelPin } from '../types';
+import { ThaiProvince, TravelPin, HikingTrail } from '../types';
 import { THAI_PROVINCES, REGIONS_META } from '../data/provincesData';
 
 interface ThailandViewProps {
   pins: TravelPin[];
+  trails: HikingTrail[];
   onOpenPinDetail: (pin: TravelPin) => void;
   onOpenNewPinModalWithProvince: (prov: ThaiProvince) => void;
 }
 
 export const ThailandView: React.FC<ThailandViewProps> = ({
   pins,
+  trails,
   onOpenPinDetail,
   onOpenNewPinModalWithProvince,
 }) => {
@@ -44,8 +46,26 @@ export const ThailandView: React.FC<ThailandViewProps> = ({
           if (prov) map.set(prov.id, pin);
         }
       });
+
+    // A hiking trail sits inside a real province, so visiting it counts
+    // that province as visited too (e.g. Phu Kradueng => Loei).
+    pins
+      .filter((p) => p.category === 'hiking')
+      .forEach((pin) => {
+        const trail = trails.find((t) => t.id === pin.locationCode) ||
+          trails.find((t) => pin.title.includes(t.name) || t.name.includes(pin.title));
+        if (!trail) return;
+        trail.province.split('/').forEach((rawName) => {
+          const name = rawName.trim();
+          const prov = THAI_PROVINCES.find((p) => name.includes(p.nameTh) || p.nameTh.includes(name));
+          if (prov && !map.has(prov.id)) {
+            map.set(prov.id, pin);
+          }
+        });
+      });
+
     return map;
-  }, [pins]);
+  }, [pins, trails]);
 
   // Calculate visited count per region
   const regionStats = useMemo(() => {

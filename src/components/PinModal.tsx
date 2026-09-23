@@ -130,9 +130,6 @@ export const PinModal: React.FC<PinModalProps> = ({
         setLat(TRAILS_COORDINATES[trail.id].lat);
         setLng(TRAILS_COORDINATES[trail.id].lng);
       }
-      if (trail.coverImage && photos.length === 0) {
-        setPhotos([trail.coverImage]);
-      }
       if (trail.highlight && !highlight) {
         setHighlight(trail.highlight);
       }
@@ -236,8 +233,8 @@ export const PinModal: React.FC<PinModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#244855]/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-[#FFFFFF] rounded-3xl max-w-2xl w-full p-5 sm:p-7 border border-[#E4CAB3] shadow-2xl relative my-8 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-[#244855]/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 md:p-8 overflow-y-auto">
+      <div className="bg-[#FFFFFF] rounded-3xl max-w-2xl w-full p-5 sm:p-7 border border-[#E4CAB3] shadow-2xl relative my-4 sm:my-8 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
         
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-4 border-b border-[#EFDAC1] mb-5">
@@ -270,7 +267,7 @@ export const PinModal: React.FC<PinModalProps> = ({
             <label className="block text-xs font-semibold text-[#7B483B] mb-1.5">
               1. เลือกหมวดหมู่การเดินทาง *
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setCategory('province')}

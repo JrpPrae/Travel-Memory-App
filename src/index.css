@@ -39,6 +39,24 @@
   background-color: #e9f0f8 !important;
 }
 
+/* Animated "marching dots" flow along the curved trip route line */
+.route-line-animated {
+  stroke-linecap: round;
+  animation: route-dash-flow 0.9s linear infinite;
+}
+
+@keyframes route-dash-flow {
+  to {
+    stroke-dashoffset: -22;
+  }
+}
+
+/* Photo-cover map pins: teardrop marker with a circular photo window */
+.custom-photo-pin {
+  background: transparent !important;
+  border: none !important;
+}
+
 /* Custom subtle scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

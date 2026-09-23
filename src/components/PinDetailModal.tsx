@@ -1,21 +1,24 @@
-import React, { useState } from 'react';
-import { 
-  X, 
-  Calendar, 
-  MapPin, 
-  Mountain, 
-  Globe2, 
-  Star, 
-  Users, 
-  CloudSun, 
-  Edit3, 
-  Trash2, 
-  Share2, 
-  ChevronLeft, 
+import React, { useRef, useState } from 'react';
+import {
+  X,
+  Calendar,
+  MapPin,
+  Mountain,
+  Globe2,
+  Star,
+  Users,
+  CloudSun,
+  Edit3,
+  Trash2,
+  Share2,
+  ChevronLeft,
   ChevronRight,
   Sparkles,
-  Check
+  Check,
+  Loader2,
+  Compass
 } from 'lucide-react';
+import html2canvas from 'html2canvas';
 import { TravelPin } from '../types';
 
 interface PinDetailModalProps {
@@ -32,7 +35,8 @@ export const PinDetailModal: React.FC<PinDetailModalProps> = ({
   onDelete,
 }) => {
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
-  const [copied, setCopied] = useState(false);
+  const [shareStatus, setShareStatus] = useState<'idle' | 'generating' | 'done' | 'error'>('idle');
+  const shareCardRef = useRef<HTMLDivElement>(null);
 
   if (!pin) return null;
 
@@ -52,16 +56,43 @@ export const PinDetailModal: React.FC<PinDetailModalProps> = ({
   const catInfo = getCategoryInfo();
   const Icon = catInfo.icon;
 
-  const handleCopyStory = () => {
-    const text = `📌 บันทึกความทรงจำการเดินทาง: ${pin.title}\n🗓️ วันที่: ${pin.dateVisited}\n✨ ไฮไลต์: ${pin.note}\n#TravelMemoryPinboard`;
-    navigator.clipboard?.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  // Render the hidden share-card node to a PNG and download it, so the
+  // "share" action hands people back an actual image of the memory card
+  // instead of just copying text.
+  const handleShareImage = async () => {
+    if (!shareCardRef.current) return;
+    setShareStatus('generating');
+    try {
+      // Wait for web fonts (Playfair Display / Noto Sans Thai / Plus Jakarta
+      // Sans) to finish loading first, otherwise html2canvas can capture the
+      // card mid-swap and render some glyphs (digits especially) in the
+      // browser's fallback font at the wrong size.
+      if (document.fonts?.ready) {
+        await document.fonts.ready;
+      }
+      const canvas = await html2canvas(shareCardRef.current, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true,
+      });
+      const dataUrl = canvas.toDataURL('image/png');
+      const safeName = pin.title.replace(/[^a-zA-Z0-9ก-๙]+/g, '_').slice(0, 40) || 'travel-memory';
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `${safeName}.png`;
+      link.click();
+      setShareStatus('done');
+    } catch (err) {
+      console.error('Failed to generate share image:', err);
+      setShareStatus('error');
+    } finally {
+      setTimeout(() => setShareStatus('idle'), 2500);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#244855]/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-[#FFFFFF] rounded-3xl max-w-3xl w-full border border-[#E4CAB3] shadow-2xl relative my-8 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-[#244855]/65 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 md:p-8 overflow-y-auto">
+      <div className="bg-[#FFFFFF] rounded-3xl max-w-3xl w-full border border-[#E4CAB3] shadow-2xl relative my-4 sm:my-8 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
         
         {/* Header toolbar */}
         <div className="p-4 sm:p-5 border-b border-[#EFDAC1] flex items-center justify-between bg-[#FBE9D0]">
@@ -78,12 +109,23 @@ export const PinDetailModal: React.FC<PinDetailModalProps> = ({
 
           <div className="flex items-center gap-1.5">
             <button
-              onClick={handleCopyStory}
-              className="p-2 text-[#9C6B58] hover:text-[#244855] hover:bg-[#FDF4E7] rounded-xl transition-colors text-xs flex items-center gap-1"
-              title="คัดลอกเรื่องราว"
+              onClick={handleShareImage}
+              disabled={shareStatus === 'generating'}
+              className="p-2 text-[#9C6B58] hover:text-[#244855] hover:bg-[#FDF4E7] rounded-xl transition-colors text-xs flex items-center gap-1 disabled:opacity-60"
+              title="บันทึกเป็นภาพการ์ด"
             >
-              {copied ? <Check className="w-4 h-4 text-green-600" /> : <Share2 className="w-4 h-4" />}
-              <span className="hidden sm:inline">{copied ? 'คัดลอกแล้ว' : 'แชร์'}</span>
+              {shareStatus === 'generating' ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : shareStatus === 'done' ? (
+                <Check className="w-4 h-4 text-green-600" />
+              ) : shareStatus === 'error' ? (
+                <X className="w-4 h-4 text-red-600" />
+              ) : (
+                <Share2 className="w-4 h-4" />
+              )}
+              <span className="hidden sm:inline">
+                {shareStatus === 'generating' ? 'กำลังสร้างภาพ...' : shareStatus === 'done' ? 'บันทึกภาพแล้ว' : shareStatus === 'error' ? 'สร้างภาพไม่สำเร็จ' : 'แชร์'}
+              </span>
             </button>
 
             <button
@@ -258,6 +300,117 @@ export const PinDetailModal: React.FC<PinDetailModalProps> = ({
           </button>
         </div>
 
+      </div>
+
+      {/* Hidden share card: rendered off-screen and captured to a PNG by
+          handleShareImage, so the downloaded image matches this layout
+          without the modal's interactive buttons/controls. The outer frame
+          gives the exported PNG breathing room instead of an edge-to-edge
+          screenshot, and font-family is pinned inline as a safety net so
+          html2canvas never falls back to a mismatched system font. */}
+      <div
+        ref={shareCardRef}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: '-9999px',
+          width: '680px',
+          fontFamily: "'Plus Jakarta Sans', 'Noto Sans Thai', sans-serif",
+        }}
+        className="p-6 bg-gradient-to-br from-[#90AEAD] to-[#FBE9D0]"
+      >
+        <div className="bg-white rounded-[28px] border border-[#E4CAB3] overflow-hidden">
+          <div className="p-5 flex items-center justify-between bg-[#FBE9D0]">
+            <span className={`text-xs font-semibold px-3 py-1 rounded-xl border flex items-center gap-1.5 ${catInfo.color}`}>
+              <Icon className="w-3.5 h-3.5" />
+              {catInfo.label}
+            </span>
+            <span className="text-xs text-[#9C6B58] flex items-center gap-1" style={{ fontVariantNumeric: 'tabular-nums' }}>
+              <Calendar className="w-3.5 h-3.5" />
+              {pin.dateVisited}
+            </span>
+          </div>
+
+          {hasPhotos && (
+            <div className="w-full aspect-[16/9] bg-[#FDF4E7] overflow-hidden">
+              <img
+                src={pin.photos[activePhotoIdx]}
+                alt={pin.title}
+                crossOrigin="anonymous"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+
+          <div className="p-6 space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2
+                  className="text-2xl font-bold text-[#244855] leading-tight"
+                  style={{ fontFamily: "'Playfair Display', 'Noto Sans Thai', serif" }}
+                >
+                  {pin.title}
+                </h2>
+                {pin.subtitle && (
+                  <p className="text-sm text-[#9C6B58] mt-1 font-light">
+                    {pin.subtitle}
+                  </p>
+                )}
+              </div>
+              {pin.rating && (
+                <div
+                  className="flex items-center gap-1 bg-[#EAD3BB] px-3 py-1.5 rounded-xl border border-[#EFDAC1] flex-shrink-0"
+                  style={{ fontVariantNumeric: 'tabular-nums' }}
+                >
+                  <Star className="w-4 h-4 fill-[#D4AF37] text-[#D4AF37]" />
+                  <span className="font-bold text-sm text-[#244855]">{pin.rating} / 5</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-2" style={{ fontVariantNumeric: 'tabular-nums' }}>
+              {pin.elevation && (
+                <span className="px-2.5 py-1 rounded-lg bg-[#EEF4F3] text-[#4A6C74] text-xs font-semibold border border-[#BCCECE] flex items-center gap-1">
+                  <Mountain className="w-3.5 h-3.5" />
+                  ความสูง: {pin.elevation.toLocaleString()} เมตร
+                </span>
+              )}
+              {pin.companion && (
+                <span className="px-2.5 py-1 rounded-lg bg-[#FBE9D0] text-[#874F41] text-xs font-medium border border-[#E4CAB3] flex items-center gap-1">
+                  <Users className="w-3.5 h-3.5 text-[#874F41]" />
+                  {pin.companion}
+                </span>
+              )}
+              {pin.weather && (
+                <span className="px-2.5 py-1 rounded-lg bg-[#FBE9D0] text-[#874F41] text-xs font-medium border border-[#E4CAB3]">
+                  สภาพอากาศ: {pin.weather}
+                </span>
+              )}
+              {pin.highlight && (
+                <span className="px-2.5 py-1 rounded-lg bg-[#FFF8E7] text-[#9E6900] text-xs font-medium border border-[#FCE8B3] flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  จุดประทับใจ: {pin.highlight}
+                </span>
+              )}
+            </div>
+
+            <div className="bg-[#FBE9D0] p-5 rounded-2xl border border-[#E4CAB3] space-y-2">
+              <span className="text-xs font-bold text-[#874F41] uppercase tracking-wider block">
+                📖 บันทึกความทรงจำ (Travel Note)
+              </span>
+              <p className="text-sm text-[#244855] leading-relaxed whitespace-pre-line font-light">
+                {pin.note || 'ไม่มีข้อความบันทึก'}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center gap-1.5 pt-3 mt-1 border-t border-[#EFDAC1] text-[#B98D79]">
+              <Compass className="w-3.5 h-3.5" />
+              <span className="text-[11px] font-semibold" style={{ fontFamily: "'Playfair Display', 'Noto Sans Thai', serif" }}>
+                Travel Memory Pinboard
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

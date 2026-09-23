@@ -230,7 +230,7 @@ export const MyPlanView: React.FC<MyPlanViewProps> = ({
                 <label className="block text-xs font-semibold text-[#7B483B] mb-1">
                   หมวดหมู่สถานที่ *
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button
                     type="button"
                     onClick={() => setCategory('hiking')}

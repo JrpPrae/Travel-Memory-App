@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Header, 
-  ActiveTab 
+import {
+  Header,
+  ActiveTab
 } from './components/Header';
+import { AuthView } from './components/AuthView';
 import { InteractiveMapView } from './components/InteractiveMapView';
 import { PinboardView } from './components/PinboardView';
 import { ThailandView } from './components/ThailandView';
@@ -12,30 +13,33 @@ import { ChecklistView } from './components/ChecklistView';
 import { MyPlanView } from './components/MyPlanView';
 import { PinModal } from './components/PinModal';
 import { PinDetailModal } from './components/PinDetailModal';
-import { 
-  TravelPin, 
-  ChecklistItem, 
-  TripPlan, 
-  HikingTrail, 
-  PinCategory, 
-  ThaiProvince, 
-  WorldCountry 
+import {
+  TravelPin,
+  ChecklistItem,
+  TripPlan,
+  HikingTrail,
+  PinCategory,
+  ThaiProvince,
+  WorldCountry
 } from './types';
-import { 
-  getSavedPins, 
-  savePins, 
-  getSavedChecklist, 
-  saveChecklist, 
-  getSavedPlans, 
-  savePlans, 
-  getSavedTrails, 
+import {
+  getSavedPins,
+  savePins,
+  getSavedChecklist,
+  saveChecklist,
+  getSavedPlans,
+  savePlans,
+  getSavedTrails,
   saveTrails,
   calculateTravelStats,
-  resetToSampleData
+  resetToSampleData,
+  setStorageNamespace
 } from './utils/storage';
+import { getCurrentUsername, logout } from './utils/auth';
 import { DEFAULT_CHECKLIST_TEMPLATES } from './data/checklistTemplates';
 
 export default function App() {
+  const [currentUser, setCurrentUser] = useState<string | null>(() => getCurrentUsername());
   const [activeTab, setActiveTab] = useState<ActiveTab>('map');
   const [pins, setPins] = useState<TravelPin[]>([]);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
@@ -60,16 +64,32 @@ export default function App() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Load initial data
+  // Load the logged-in user's own data whenever the active account changes
   useEffect(() => {
+    if (!currentUser) return;
+    setStorageNamespace(currentUser);
     setPins(getSavedPins());
     setChecklist(getSavedChecklist());
     setPlans(getSavedPlans());
     setTrails(getSavedTrails());
-  }, []);
+  }, [currentUser]);
 
-  // Compute live statistics
-  const stats = useMemo(() => calculateTravelStats(pins), [pins]);
+  const handleAuthSuccess = (username: string) => {
+    setCurrentUser(username);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setCurrentUser(null);
+    setPins([]);
+    setChecklist([]);
+    setPlans([]);
+    setTrails([]);
+    setActiveTab('map');
+  };
+
+  // Compute live statistics (hiking trails also count their home province)
+  const stats = useMemo(() => calculateTravelStats(pins, trails), [pins, trails]);
 
   // Handlers for Pins
   const handleSavePin = (savedPin: TravelPin) => {
@@ -235,14 +255,19 @@ export default function App() {
   };
 
   const handleResetDemo = () => {
-    if (window.confirm('คุณต้องการรีเซ็ตข้อมูลทั้งหมดกลับเป็นข้อมูลตัวอย่างเริ่มต้นใช่หรือไม่?')) {
+    if (window.confirm('คุณต้องการล้างข้อมูลความทรงจำทั้งหมดของบัญชีนี้ใช่หรือไม่?')) {
       resetToSampleData();
     }
   };
 
+  // Not logged in: show the login / register screen instead of the app
+  if (!currentUser) {
+    return <AuthView onAuthSuccess={handleAuthSuccess} />;
+  }
+
   return (
-    <div className="min-h-screen bg-[#90AEAD] text-[#244855] flex flex-col font-sans selection:bg-[#E4CAB3] selection:text-[#244855]">
-      
+    <div className="min-h-screen bg-[#f7f3e8] text-[#244855] flex flex-col font-sans selection:bg-[#E4CAB3] selection:text-[#244855]">
+
       {/* Top Navbar */}
       <Header
         activeTab={activeTab}
@@ -250,6 +275,8 @@ export default function App() {
         stats={stats}
         onOpenNewPinModal={() => handleOpenNewPin()}
         onResetDemo={handleResetDemo}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
 
       {/* Main Content Container */}
@@ -279,6 +306,7 @@ export default function App() {
         {activeTab === 'provinces' && (
           <ThailandView
             pins={pins}
+            trails={trails}
             onOpenPinDetail={(pin) => setSelectedDetailPin(pin)}
             onOpenNewPinModalWithProvince={handleOpenPinWithProvince}
           />
@@ -334,8 +362,8 @@ export default function App() {
             <span className="font-serif font-bold text-sm text-[#244855]">
               Travel Memory Pinboard
             </span>
-            <span>•</span>
-            <span>ปักหมุดความทรงจำ 3 หมวดการเดินทาง</span>
+            {/* <span>•</span> */}
+            {/* <span>ปักหมุดความทรงจำ 3 หมวดการเดินทาง</span> */}
           </div>
           <p className="text-[#9C6B58]">
             บันทึกรูปภาพ • โน๊ต • วันที่ • เช็กลิสต์ • แผนการเดินทาง
