@@ -190,31 +190,36 @@ export const InteractiveMapView: React.FC<InteractiveMapViewProps> = ({
       const coverThumb = (pin.photos && pin.photos.length > 0) ? pin.photos[0] : null;
       const coverFocus = (pin.photoFocus && pin.photoFocus.length > 0) ? pin.photoFocus[0] : '50% 50%';
 
-      // Custom HTML Marker: a teardrop pin shape with the pin's cover photo
-      // inset in a circular window that fills nearly the whole bulb, leaving
-      // just a thin ring of the category color between photo and white border.
+      // Custom HTML Marker: a plain circular photo avatar with a small
+      // pointer underneath. An earlier version built the teardrop shape by
+      // rotating a square (with a counter-rotated inner circle to keep the
+      // photo upright), but rotate + border-radius + overflow:hidden nested
+      // like that is a known WebKit clipping bug — Safari/iOS would leave a
+      // sliver of the pin unclipped so the photo didn't fully fill the
+      // circle. A non-rotated circle plus a CSS-triangle pointer avoids the
+      // bug entirely and also lets the photo fill the whole circle, not just
+      // an inset window.
       const markerHtml = `
-        <div class="relative flex items-center justify-center cursor-pointer group" style="width: 40px; height: 48px;">
-          <div class="absolute top-0 left-1/2 transition-transform duration-200 ${
+        <div class="relative flex flex-col items-center cursor-pointer group" style="width: 40px; height: 50px;">
+          <div class="rounded-full overflow-hidden transition-transform duration-200 ${
             isSelected ? 'scale-110' : 'group-hover:scale-105'
-          }" style="width: 40px; height: 40px; margin-left: -20px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background-color: ${pinColor}; border: 3px solid #FFFFFF; box-shadow: 0 4px 10px ${categoryColor.shadow}80, 0 2px 4px rgba(0,0,0,0.15);">
-            <div class="absolute" style="top: 50%; left: 50%; width: 33px; height: 33px; margin: -16.5px 0 0 -16.5px; border-radius: 50%; transform: rotate(45deg); overflow: hidden; background-color: rgba(255,255,255,0.35);">
-              ${
-                coverThumb
-                  ? `<img src="${coverThumb}" alt="" class="w-full h-full object-cover" style="object-position: ${coverFocus};" />`
-                  : `<div class="w-full h-full flex items-center justify-center" style="background-color: ${pinColor};"></div>`
-              }
-            </div>
+          }" style="width: 36px; height: 36px; border: 3px solid #FFFFFF; background-color: ${pinColor}; box-shadow: 0 4px 10px ${categoryColor.shadow}80, 0 2px 4px rgba(0,0,0,0.15);">
+            ${
+              coverThumb
+                ? `<img src="${coverThumb}" alt="" class="w-full h-full object-cover" style="object-position: ${coverFocus};" />`
+                : ''
+            }
           </div>
+          <div style="width: 0; height: 0; margin-top: -2px; border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 10px solid ${pinColor}; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.18));"></div>
         </div>
       `;
 
       const customIcon = L.divIcon({
         html: markerHtml,
         className: 'custom-photo-pin',
-        iconSize: [40, 48],
-        iconAnchor: [20, 44],
-        popupAnchor: [0, -42],
+        iconSize: [40, 50],
+        iconAnchor: [20, 46],
+        popupAnchor: [0, -44],
       });
 
       const marker = L.marker([coords.lat, coords.lng], { icon: customIcon });
