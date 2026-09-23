@@ -93,7 +93,7 @@ export const PinDetailModal: React.FC<PinDetailModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 bg-[#244855]/65 backdrop-blur-xs overflow-y-auto px-4 py-6 sm:px-6 sm:py-10">
       <div className="min-h-full flex items-start justify-center">
-      <div className="bg-[#FFFFFF] rounded-3xl max-w-3xl w-full border border-[#E4CAB3] shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+      <div className="bg-[#FFFFFF] rounded-3xl max-w-2xl w-full border border-[#E4CAB3] shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
 
         {/* Header toolbar */}
         <div className="p-4 sm:p-5 border-b border-[#EFDAC1] flex items-center justify-between bg-[#FBE9D0]">
@@ -165,12 +165,13 @@ export const PinDetailModal: React.FC<PinDetailModalProps> = ({
           {/* Photo Showcase (Polaroid Frame) */}
           {hasPhotos && (
             <div className="space-y-3">
-              <div className="relative aspect-[16/10] sm:aspect-[16/9] rounded-2xl overflow-hidden bg-[#FDF4E7] border border-[#E4CAB3] shadow-inner">
+              <div className="relative aspect-[16/10] sm:aspect-[16/9] max-h-[40vh] mx-auto rounded-2xl overflow-hidden bg-[#FDF4E7] border border-[#E4CAB3] shadow-inner">
                 <img
                   src={pin.photos[activePhotoIdx]}
                   alt={pin.title}
                   referrerPolicy="no-referrer"
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover"
+                  style={{ objectPosition: pin.photoFocus?.[activePhotoIdx] || '50% 50%' }}
                 />
 
                 {/* Slideshow Controls */}
@@ -206,7 +207,13 @@ export const PinDetailModal: React.FC<PinDetailModalProps> = ({
                         activePhotoIdx === idx ? 'border-[#874F41] scale-105' : 'border-transparent opacity-60 hover:opacity-100'
                       }`}
                     >
-                      <img src={url} alt="" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                      <img
+                        src={url}
+                        alt=""
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover"
+                        style={{ objectPosition: pin.photoFocus?.[idx] || '50% 50%' }}
+                      />
                     </button>
                   ))}
                 </div>
@@ -340,6 +347,7 @@ export const PinDetailModal: React.FC<PinDetailModalProps> = ({
                 alt={pin.title}
                 crossOrigin="anonymous"
                 className="w-full h-full object-cover"
+                style={{ objectPosition: pin.photoFocus?.[activePhotoIdx] || '50% 50%' }}
               />
             </div>
           )}

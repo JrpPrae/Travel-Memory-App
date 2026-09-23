@@ -8,6 +8,7 @@ export interface TravelPin {
   dateVisited: string; // YYYY-MM-DD or readable date
   endDate?: string;
   photos: string[]; // URLs or base64 data strings
+  photoFocus?: string[]; // CSS object-position ("x% y%") per photo, same index as `photos` — lets a cropped/covered view (pin marker, detail viewer) keep the subject in frame instead of always centering
   note: string;
   rating?: number; // 1 to 5
   tags?: string[];

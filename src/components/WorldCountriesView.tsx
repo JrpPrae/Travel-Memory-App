@@ -229,6 +229,7 @@ export const WorldCountriesView: React.FC<WorldCountriesViewProps> = ({
                           alt={pin.title}
                           referrerPolicy="no-referrer"
                           className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-300"
+                          style={{ objectPosition: pin.photoFocus?.[0] || '50% 50%' }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent flex items-end p-2">
                           <span className="text-[10px] text-white flex items-center gap-1">

@@ -283,6 +283,7 @@ export const HikingTrailsView: React.FC<HikingTrailsViewProps> = ({
                       alt={trail.name}
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      style={isConquered && pin?.photos?.[0] ? { objectPosition: pin.photoFocus?.[0] || '50% 50%' } : undefined}
                     />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-[#5F8085]">

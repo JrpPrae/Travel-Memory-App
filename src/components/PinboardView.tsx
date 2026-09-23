@@ -295,6 +295,7 @@ export const PinboardView: React.FC<PinboardViewProps> = ({
                         alt={pin.title}
                         referrerPolicy="no-referrer"
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        style={{ objectPosition: pin.photoFocus?.[0] || '50% 50%' }}
                       />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center text-[#B98D79] p-4 text-center">
@@ -407,6 +408,7 @@ export const PinboardView: React.FC<PinboardViewProps> = ({
                         alt={pin.title}
                         referrerPolicy="no-referrer"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        style={{ objectPosition: pin.photoFocus?.[0] || '50% 50%' }}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-[#B98D79]">

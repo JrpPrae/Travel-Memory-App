@@ -188,18 +188,20 @@ export const InteractiveMapView: React.FC<InteractiveMapViewProps> = ({
 
       const pinColor = isSelected ? categoryColor.selected : categoryColor.base;
       const coverThumb = (pin.photos && pin.photos.length > 0) ? pin.photos[0] : null;
+      const coverFocus = (pin.photoFocus && pin.photoFocus.length > 0) ? pin.photoFocus[0] : '50% 50%';
 
       // Custom HTML Marker: a teardrop pin shape with the pin's cover photo
-      // inset in a circular window.
+      // inset in a circular window that fills nearly the whole bulb, leaving
+      // just a thin ring of the category color between photo and white border.
       const markerHtml = `
-        <div class="relative flex items-center justify-center cursor-pointer group" style="width: 38px; height: 46px;">
+        <div class="relative flex items-center justify-center cursor-pointer group" style="width: 40px; height: 48px;">
           <div class="absolute top-0 left-1/2 transition-transform duration-200 ${
             isSelected ? 'scale-110' : 'group-hover:scale-105'
-          }" style="width: 38px; height: 38px; margin-left: -19px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background-color: ${pinColor}; border: 3px solid #FFFFFF; box-shadow: 0 4px 10px ${categoryColor.shadow}80, 0 2px 4px rgba(0,0,0,0.15);">
-            <div class="absolute" style="top: 50%; left: 50%; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; transform: rotate(45deg); overflow: hidden; background-color: rgba(255,255,255,0.35);">
+          }" style="width: 40px; height: 40px; margin-left: -20px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background-color: ${pinColor}; border: 3px solid #FFFFFF; box-shadow: 0 4px 10px ${categoryColor.shadow}80, 0 2px 4px rgba(0,0,0,0.15);">
+            <div class="absolute" style="top: 50%; left: 50%; width: 33px; height: 33px; margin: -16.5px 0 0 -16.5px; border-radius: 50%; transform: rotate(45deg); overflow: hidden; background-color: rgba(255,255,255,0.35);">
               ${
                 coverThumb
-                  ? `<img src="${coverThumb}" alt="" class="w-full h-full object-cover" />`
+                  ? `<img src="${coverThumb}" alt="" class="w-full h-full object-cover" style="object-position: ${coverFocus};" />`
                   : `<div class="w-full h-full flex items-center justify-center" style="background-color: ${pinColor};"></div>`
               }
             </div>
@@ -210,9 +212,9 @@ export const InteractiveMapView: React.FC<InteractiveMapViewProps> = ({
       const customIcon = L.divIcon({
         html: markerHtml,
         className: 'custom-photo-pin',
-        iconSize: [38, 46],
-        iconAnchor: [19, 42],
-        popupAnchor: [0, -40],
+        iconSize: [40, 48],
+        iconAnchor: [20, 44],
+        popupAnchor: [0, -42],
       });
 
       const marker = L.marker([coords.lat, coords.lng], { icon: customIcon });
@@ -220,6 +222,7 @@ export const InteractiveMapView: React.FC<InteractiveMapViewProps> = ({
       // Custom Popup matching the screenshot:
       // Photo on top with close button, title below, and date in soft pink/red italic
       const coverPhoto = (pin.photos && pin.photos.length > 0) ? pin.photos[0] : null;
+      const coverPhotoFocus = (pin.photoFocus && pin.photoFocus.length > 0) ? pin.photoFocus[0] : '50% 50%';
 
       const displayDate = formatDisplayDate(pin.dateVisited);
       const categoryMeta = getCategoryMeta(pin.category);
@@ -230,7 +233,7 @@ export const InteractiveMapView: React.FC<InteractiveMapViewProps> = ({
         <div class="relative w-full aspect-[4/3] bg-[#FDF4E7] overflow-hidden group">
           ${
             coverPhoto
-              ? `<img src="${coverPhoto}" alt="${pin.title}" class="w-full h-full object-cover" />`
+              ? `<img src="${coverPhoto}" alt="${pin.title}" class="w-full h-full object-cover" style="object-position: ${coverPhotoFocus};" />`
               : `<div class="w-full h-full flex flex-col items-center justify-center text-[#B98D79]">
                    ${popupSvg(POPUP_ICON.image, 'w-8 h-8 mb-1')}
                    <span class="text-xs">ไม่มีรูปภาพ</span>

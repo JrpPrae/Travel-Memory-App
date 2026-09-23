@@ -13,7 +13,8 @@ import {
   CloudSun,
   Sparkles,
   Link,
-  Trash2
+  Trash2,
+  Move
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { TravelPin, PinCategory, ThaiProvince, HikingTrail, WorldCountry } from '../types';
@@ -55,6 +56,7 @@ export const PinModal: React.FC<PinModalProps> = ({
   const [lng, setLng] = useState<number | undefined>(initialCoords?.lng);
   const [dateVisited, setDateVisited] = useState(new Date().toISOString().slice(0, 10));
   const [photos, setPhotos] = useState<string[]>([]);
+  const [photoFocus, setPhotoFocus] = useState<string[]>([]);
   const [photoUrlInput, setPhotoUrlInput] = useState('');
   const [note, setNote] = useState('');
   const [rating, setRating] = useState<number>(5);
@@ -78,6 +80,7 @@ export const PinModal: React.FC<PinModalProps> = ({
       setLng(editingPin.lng);
       setDateVisited(editingPin.dateVisited);
       setPhotos(editingPin.photos || []);
+      setPhotoFocus(editingPin.photoFocus || []);
       setNote(editingPin.note);
       setRating(editingPin.rating || 5);
       setTags(editingPin.tags || []);
@@ -94,6 +97,7 @@ export const PinModal: React.FC<PinModalProps> = ({
       setLng(initialCoords?.lng);
       setDateVisited(new Date().toISOString().slice(0, 10));
       setPhotos([]);
+      setPhotoFocus([]);
       setNote('');
       setRating(5);
       setTags([]);
@@ -159,6 +163,7 @@ export const PinModal: React.FC<PinModalProps> = ({
       reader.onload = (event) => {
         if (event.target?.result) {
           setPhotos((prev) => [...prev, event.target!.result as string]);
+          setPhotoFocus((prev) => [...prev, '50% 50%']);
         }
       };
       reader.readAsDataURL(file);
@@ -170,11 +175,28 @@ export const PinModal: React.FC<PinModalProps> = ({
   const handleAddPhotoUrl = () => {
     if (!photoUrlInput.trim()) return;
     setPhotos((prev) => [...prev, photoUrlInput.trim()]);
+    setPhotoFocus((prev) => [...prev, '50% 50%']);
     setPhotoUrlInput('');
   };
 
   const handleRemovePhoto = (index: number) => {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
+    setPhotoFocus((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Lets people drag inside a photo thumbnail to choose which part of the
+  // image stays in view once it's cropped to fill a circle/frame elsewhere
+  // (map pin, detail viewer) — updates that photo's CSS object-position.
+  const handlePhotoFocusDrag = (index: number, e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.buttons !== 1 && e.pointerType !== 'touch') return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100));
+    const y = Math.min(100, Math.max(0, ((e.clientY - rect.top) / rect.height) * 100));
+    setPhotoFocus((prev) => {
+      const next = [...prev];
+      next[index] = `${x.toFixed(0)}% ${y.toFixed(0)}%`;
+      return next;
+    });
   };
 
   const handleAddTag = (e: React.KeyboardEvent) => {
@@ -216,6 +238,7 @@ export const PinModal: React.FC<PinModalProps> = ({
       locationCode: locationCode || undefined,
       dateVisited: dateVisited || new Date().toISOString().slice(0, 10),
       photos,
+      photoFocus: photoFocus.length > 0 ? photoFocus : undefined,
       note: note.trim(),
       rating,
       tags: tags.length > 0 ? tags : undefined,
@@ -413,7 +436,7 @@ export const PinModal: React.FC<PinModalProps> = ({
 
           {/* Date & Meta */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs font-semibold text-[#7B483B] mb-1">
                 วันที่เดินทางไป *
               </label>
@@ -423,19 +446,19 @@ export const PinModal: React.FC<PinModalProps> = ({
                   required
                   value={dateVisited}
                   onChange={(e) => setDateVisited(e.target.value)}
-                  className="w-full px-3 py-2 bg-[#FBE9D0] border border-[#E4CAB3] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#874F41]"
+                  className="w-full min-w-0 px-3 py-2 bg-[#FBE9D0] border border-[#E4CAB3] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#874F41]"
                 />
               </div>
             </div>
 
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs font-semibold text-[#7B483B] mb-1">
                 เพื่อนร่วมทาง
               </label>
               <select
                 value={companion}
                 onChange={(e) => setCompanion(e.target.value)}
-                className="w-full px-3 py-2 bg-[#FBE9D0] border border-[#E4CAB3] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#874F41]"
+                className="w-full min-w-0 px-3 py-2 bg-[#FBE9D0] border border-[#E4CAB3] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#874F41]"
               >
                 <option value="ไปคนเดียว (Solo)">ไปคนเดียว (Solo)</option>
                 <option value="กับเพื่อน">กับเพื่อน</option>
@@ -445,14 +468,14 @@ export const PinModal: React.FC<PinModalProps> = ({
               </select>
             </div>
 
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs font-semibold text-[#7B483B] mb-1">
                 สภาพอากาศ
               </label>
               <select
                 value={weather}
                 onChange={(e) => setWeather(e.target.value as any)}
-                className="w-full px-3 py-2 bg-[#FBE9D0] border border-[#E4CAB3] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#874F41]"
+                className="w-full min-w-0 px-3 py-2 bg-[#FBE9D0] border border-[#E4CAB3] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#874F41]"
               >
                 <option value="หนาวเย็น">❄️ หนาวเย็น</option>
                 <option value="แดดออก">☀️ แดดออกแจ่มใส</option>
@@ -542,32 +565,62 @@ export const PinModal: React.FC<PinModalProps> = ({
               </div>
             </div>
 
-            {/* Photo Previews */}
+            {/* Photo Previews — drag inside a thumbnail to pick which part of
+                the photo stays visible once it's cropped elsewhere (map pin,
+                detail viewer) */}
             {photos.length > 0 && (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 pt-2">
-                {photos.map((url, idx) => (
-                  <div key={idx} className="relative aspect-square rounded-xl overflow-hidden bg-[#FDF4E7] border border-[#E4CAB3] group">
-                    <img
-                      src={url}
-                      alt={`Memory photo ${idx + 1}`}
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-contain"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleRemovePhoto(idx)}
-                      className="absolute top-1 right-1 p-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+              <>
+                <p className="text-[10px] text-[#B98D79] flex items-center gap-1">
+                  <Move className="w-3 h-3" />
+                  <span>ลากบนรูปเพื่อเลือกจุดที่ต้องการเน้น (สำหรับตอนครอปเป็นวงกลม/กรอบ)</span>
+                </p>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 pt-1">
+                  {photos.map((url, idx) => (
+                    <div
+                      key={idx}
+                      className="relative aspect-square rounded-xl overflow-hidden bg-[#FDF4E7] border border-[#E4CAB3] group cursor-move touch-none select-none"
+                      onPointerDown={(e) => {
+                        e.currentTarget.setPointerCapture(e.pointerId);
+                        handlePhotoFocusDrag(idx, e);
+                      }}
+                      onPointerMove={(e) => {
+                        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+                          handlePhotoFocusDrag(idx, e);
+                        }
+                      }}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                    {idx === 0 && (
-                      <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[9px]">
-                        ภาพปก
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
+                      <img
+                        src={url}
+                        alt={`Memory photo ${idx + 1}`}
+                        referrerPolicy="no-referrer"
+                        draggable={false}
+                        className="w-full h-full object-cover pointer-events-none"
+                        style={{ objectPosition: photoFocus[idx] || '50% 50%' }}
+                      />
+                      {/* Focus point indicator */}
+                      <span
+                        className="absolute w-3 h-3 rounded-full bg-white border-2 border-[#E64833] shadow pointer-events-none -translate-x-1/2 -translate-y-1/2"
+                        style={{
+                          left: (photoFocus[idx] || '50% 50%').split(' ')[0],
+                          top: (photoFocus[idx] || '50% 50%').split(' ')[1],
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePhoto(idx)}
+                        className="absolute top-1 right-1 p-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                      {idx === 0 && (
+                        <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[9px]">
+                          ภาพปก
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
 
